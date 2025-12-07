@@ -23,37 +23,79 @@ def index():
     students = db.session.execute(text('SELECT * FROM student')).fetchall()
     return render_template('index.html', students=students)
 
+# @app.route('/add', methods=['POST'])
+# def add_student():
+#     name = request.form['name']
+#     age = request.form['age']
+#     grade = request.form['grade']
+    
+
+#     connection = sqlite3.connect('instance/students.db')
+#     cursor = connection.cursor()
+
+#     # RAW Query
+#     # db.session.execute(
+#     #     text("INSERT INTO student (name, age, grade) VALUES (:name, :age, :grade)"),
+#     #     {'name': name, 'age': age, 'grade': grade}
+#     # )
+#     # db.session.commit()
+#     query = f"INSERT INTO student (name, age, grade) VALUES ('{name}', {age}, '{grade}')"
+#     print(name,age,grade)
+#     cursor.execute(query)
+#     connection.commit()
+#     connection.close()
+#     return redirect(url_for('index'))
+
 @app.route('/add', methods=['POST'])
 def add_student():
     name = request.form['name']
     age = request.form['age']
     grade = request.form['grade']
     
+    # [PERBAIKAN]
+    db.session.execute(
+        text("INSERT INTO student (name, age, grade) VALUES (:name, :age, :grade)"),
+        {'name': name, 'age': age, 'grade': grade}
+    )
+    db.session.commit()
 
-    connection = sqlite3.connect('instance/students.db')
-    cursor = connection.cursor()
-
-    # RAW Query
-    # db.session.execute(
-    #     text("INSERT INTO student (name, age, grade) VALUES (:name, :age, :grade)"),
-    #     {'name': name, 'age': age, 'grade': grade}
-    # )
-    # db.session.commit()
-    query = f"INSERT INTO student (name, age, grade) VALUES ('{name}', {age}, '{grade}')"
-    print(name,age,grade)
-    cursor.execute(query)
-    connection.commit()
-    connection.close()
     return redirect(url_for('index'))
 
 
-@app.route('/delete/<string:id>') 
+# @app.route('/delete/<string:id>') 
+# def delete_student(id):
+#     # RAW Query
+#     db.session.execute(text(f"DELETE FROM student WHERE id={id}"))
+#     db.session.commit()
+#     return redirect(url_for('index'))
+
+# [PERBAIKAN] dari GET jadi POST untuk mencegah CSRF (CWE-352 sih) (nanti sama Sudes)
+@app.route('/delete/<int:id>', methods=['GET']) 
 def delete_student(id):
-    # RAW Query
-    db.session.execute(text(f"DELETE FROM student WHERE id={id}"))
+    # [PERBAIKAN]
+    db.session.execute(
+        text("DELETE FROM student WHERE id=:student_id"),
+        {'student_id': id}
+    )
     db.session.commit()
     return redirect(url_for('index'))
 
+
+# @app.route('/edit/<int:id>', methods=['GET', 'POST'])
+# def edit_student(id):
+#     if request.method == 'POST':
+#         name = request.form['name']
+#         age = request.form['age']
+#         grade = request.form['grade']
+        
+#         # RAW Query
+#         db.session.execute(text(f"UPDATE student SET name='{name}', age={age}, grade='{grade}' WHERE id={id}"))
+#         db.session.commit()
+#         return redirect(url_for('index'))
+#     else:
+#         # RAW Query
+#         student = db.session.execute(text(f"SELECT * FROM student WHERE id={id}")).fetchone()
+#         return render_template('edit.html', student=student)
 
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_student(id):
@@ -62,15 +104,22 @@ def edit_student(id):
         age = request.form['age']
         grade = request.form['grade']
         
-        # RAW Query
-        db.session.execute(text(f"UPDATE student SET name='{name}', age={age}, grade='{grade}' WHERE id={id}"))
+        # [PERBAIKAN] Pake Parameterized Query 
+        db.session.execute(
+            text("UPDATE student SET name=:name, age=:age, grade=:grade WHERE id=:id"),
+            {'name': name, 'age': age, 'grade': grade, 'id': id}
+        )
         db.session.commit()
         return redirect(url_for('index'))
     else:
-        # RAW Query
-        student = db.session.execute(text(f"SELECT * FROM student WHERE id={id}")).fetchone()
+        # [PERBAIKAN] Pake Parameterized Query 
+        student = db.session.execute(
+            text("SELECT * FROM student WHERE id=:id"),
+            {'id': id}
+        ).fetchone()
         return render_template('edit.html', student=student)
-
+    
+    
 # if __name__ == '__main__':
 #     with app.app_context():
 #         db.create_all()
