@@ -1,12 +1,23 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 import sqlite3
+from functools import wraps
+import secrets
 
 app = Flask(__name__)
+app.secret_key = secrets.token_hex(32)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///students.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+def login_required(f):
+    @wraps(f)
+    def cek_login(*args, **kwargs):
+        if "logged_in" not in session:
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return cek_login
 
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -17,7 +28,27 @@ class Student(db.Model):
     def __repr__(self):
         return f'<Student {self.name}>'
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        if username == "siber" and password == "siber123":
+            session["logged_in"] = True
+            return redirect(url_for("index"))
+        else:
+            return "Login gagal! Username atau password salah."
+
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.pop("logged_in", None)
+    return redirect(url_for("login"))
+
 @app.route('/')
+@login_required
 def index():
     # RAW Query
     students = db.session.execute(text('SELECT * FROM student')).fetchall()
@@ -47,6 +78,7 @@ def index():
 #     return redirect(url_for('index'))
 
 @app.route('/add', methods=['POST'])
+@login_required
 def add_student():
     name = request.form['name']
     age = request.form['age']
@@ -61,7 +93,6 @@ def add_student():
 
     return redirect(url_for('index'))
 
-
 # @app.route('/delete/<string:id>') 
 # def delete_student(id):
 #     # RAW Query
@@ -70,7 +101,8 @@ def add_student():
 #     return redirect(url_for('index'))
 
 # [PERBAIKAN] dari GET jadi POST untuk mencegah CSRF (CWE-352 sih) (nanti sama Sudes)
-@app.route('/delete/<int:id>', methods=['GET']) 
+@app.route('/delete/<int:id>', methods=['POST']) 
+@login_required
 def delete_student(id):
     # [PERBAIKAN]
     db.session.execute(
@@ -98,6 +130,7 @@ def delete_student(id):
 #         return render_template('edit.html', student=student)
 
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
 def edit_student(id):
     if request.method == 'POST':
         name = request.form['name']
