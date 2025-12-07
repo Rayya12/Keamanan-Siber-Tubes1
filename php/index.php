@@ -1,12 +1,22 @@
 <?php
-// Koneksi dan fungsi lainnya tetap sama seperti yang Anda kirimkan
-// Fungsi untuk membuka koneksi ke database SQLite3, select, update, delete, dan add
-// function connectDB() {
-    // Membuka koneksi ke database SQLite
-    include 'app.php';
-    $students=selectStudents();
-    
-// }
+session_start();
+
+// CEK LOGIN (WAJIB PALING ATAS TANPA OUTPUT)
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: login.php");
+    exit;
+}
+
+// setelah lolos login, load database
+include 'app.php';
+
+// handle tambah siswa
+if (isset($_POST['add'])) {
+    addStudent($_POST['name'], $_POST['age'], $_POST['grade']);
+}
+
+// ambil data siswa
+$students = selectStudents();
 ?>
 
 <!DOCTYPE html>
@@ -76,7 +86,7 @@
                 </tbody>
             </table>
         </section>
-
+<a href="logout.php">Logout</a>
         <footer>
             <p>&copy; 2024 Manajemen Siswa - ALH</p>
         </footer>
