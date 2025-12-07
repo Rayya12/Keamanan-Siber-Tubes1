@@ -1,4 +1,12 @@
 <?php
+session_start();
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: login.php");
+    exit;
+}
+?>
+
+<?php
 // add.php - Form untuk menambahkan data siswa
 include 'app.php'; // Menyertakan file koneksi database
 
