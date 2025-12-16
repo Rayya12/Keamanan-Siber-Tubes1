@@ -7,6 +7,11 @@
 </head>
 <body>
     <div class="container mt-5">
+
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+        </div>
+
         <h1>Students</h1>
         <form action="/add" method="POST">
             <!-- CSRF Token -->
